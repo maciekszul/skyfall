@@ -1,6 +1,7 @@
 import json
 from collections import OrderedDict
-
+from skimage import data, img_as_float
+from skimage.measure import compare_ssim as ssim
    
 def update_key_value(file, key, value):
     """
@@ -14,3 +15,14 @@ def update_key_value(file, key, value):
     
     with open(file, "w") as json_file:
         json.dump(data, json_file, indent=4)
+
+def SSIM(img1, img2):
+    """
+    Function returns SSIM measure from two images as numpy array
+    """
+    ssim_score = ssim(
+        img1,
+        img2,
+        data_range=img2.max() - img2.min(),
+        multichannel=True
+    )

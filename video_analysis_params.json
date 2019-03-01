@@ -1,4 +1,6 @@
 {
     "video_path": "data/Skyfall-short-edit-v2.mp4",
-    "frames_no": 0
+    "frames_no": 35365,
+    "SSIM": true,
+    "SSIM_tg": true
 }
