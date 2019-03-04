@@ -1,4 +1,4 @@
-# skyfall
+# SKYFALL
 
 to recreate the environment:
 
@@ -11,4 +11,4 @@ conda install --name myenv --file spec-file.txt
 
 Parameter `"frames_no"` if `0` will start counting exact amount of frames of the video and update the number in the JSON. Useful for paralellisation of the extraction of the info from the frames.
 
-Parameter`SSIM` will produce a structural similarity metric between two consecutive frames 
+Parameter`"SSIM"` will produce a structural similarity metric between two consecutive frames along the timeline of the video.
