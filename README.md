@@ -1,4 +1,10 @@
 # SKYFALL
+Cloudbased services which accounts might be needed:
+- Google Cloud https://cloud.google.com/
+- Indico https://indico.io
+- ClarifAI https://clarifai.com
+- Amazon AWS https://aws.amazon.com
+
 
 to recreate the environment used in analysis:
 ```
