@@ -26,3 +26,7 @@ def SSIM(img1, img2):
         data_range=img2.max() - img2.min(),
         multichannel=True
     )
+    return ssim_score
+
+def SSIM_temp_gen(ix_mx):
+    pass

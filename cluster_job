@@ -1,0 +1,7 @@
+#!/bin/bash
+#SBATCH --array 0
+#SBATCH -p cubric-default
+#SBATCH --ntasks 12
+#SBATCH --out /cubric/data/c1557187/skyfall/data/video_extraction.out
+source activate skyfall
+python /cubric/data/c1557187/skyfall/video_extraction.py
