@@ -3,11 +3,22 @@ import json
 from utilities import files
 import numpy as np
 import itertools
+import argparse
 import misc
-import matplotlib.pyplot as plt
 from pliers.stimuli import VideoStim, VideoFrameStim
 from pliers.extractors import IndicoAPIImageExtractor
-from joblib import Parallel, delayed
+from joblib import Parallel, delayed, dump, load
+import shutil
+
+
+des = "SPLIT"
+parser = argparse.ArgumentParser(description=des)
+parser.add_argument('-n', type=int, nargs="?", const=0, help="number of split parts")
+parser.add_argument('-s', type=int, nargs="?", const=0, help="split part number")
+args = parser.parse_args()
+params = vars(args)
+split_no = params["n"]
+split_pt = params["s"]
 
 json_key_file = "keys/keys.json"
 with open(json_key_file) as key_file:
@@ -39,39 +50,66 @@ if analysis["frames_no"] == 0:
 
     misc.update_key_value(json_vid_file, "frames_no", total_frames)
 
-# vid = VideoStim(vid_file)
-# frame1 = VideoFrameStim(vid, 1)
-# frame2 = VideoFrameStim(vid, 2)
 
 if analysis["SSIM"]:
-    pass
-    # vid = VideoStim(vid_file)
-    # frame1 = VideoFrameStim(vid, 1)
-    # frame2 = VideoFrameStim(vid, 2)
-    # print(misc.SSIM(frame1.data, frame2.data))
-
-
-if analysis["SSIM_tg"]:
-    # fr = analyipythonsis["frames_no"]
-    fr = 100
+    fr = analysis["frames_no"]
     vid = VideoStim(vid_file)
-    results = np.zeros((fr, fr))
-    fr_array = list(itertools.product(range(fr), range(fr)))
-    def ext(i):
+    fr_pw = misc.pairwise(range(fr))
+    fr_pw_split = np.array_split(fr_pw, split_no)
+    fr_pw_pt = fr_pw_split[split_pt]
+    results = np.zeros(len(fr_pw_pt))
+
+    def ext(ix, i):
         fr1, fr2 = i
         fr1_data = VideoFrameStim(vid, fr1)
         fr2_data = VideoFrameStim(vid, fr2)
         res = misc.SSIM(fr1_data.data, fr2_data.data)
-        results[fr1, fr2] = res
-    Parallel(n_jobs=-1, backend="loky", verbose=11)(delayed(ext)(i) for i in fr_array)
-    plt.imshow(
-        results, 
-        cmap="RdBu_r", 
-        origin="upper",
-        vmin=0.0,
-        vmax=1.0
+        results[ix] = res
+    
+    Parallel(n_jobs=-1, backend="threading", verbose=0)(delayed(ext)(ix, i) for ix, i in enumerate(fr_pw_pt))
+    np.save(
+        "data/{}_SSIM.npy".format(str(split_pt).zfill(5)),
+        results
     )
-    np.save("data/results.npy", results)
-    plt.savefig("data/tg.png")
 
 
+if analysis["SSIM_TG"]:
+    fr = analysis["frames_no"]
+    fr = 10
+    vid = VideoStim(vid_file)
+    fr_pw = np.array(list(itertools.combinations(list(range(fr)), 2)))
+    fr_pw_split = np.array_split(fr_pw, split_no)
+    fr_pw_pt = fr_pw_split[split_pt]
+    results = np.zeros((fr, fr))
+    memmap_file = "data/.temp/{}_SSIM_TG".format(str(split_pt).zfill(5))
+    output = np.memmap(
+        memmap_file,
+        dtype=results.dtype,
+        shape=results.shape,
+        mode="w+"
+    )
+
+    def ext(ix, i, output):
+        fr1, fr2 = i
+        fr1_data = VideoFrameStim(vid, fr1)
+        fr2_data = VideoFrameStim(vid, fr2)
+        res = misc.SSIM(fr1_data.data, fr2_data.data)
+        output[fr1, fr2] = res
+        feedback = "{}/{}_{}_{}_{}".format(
+            str(ix+1).zfill(5),
+            str(len(fr_pw_pt)).zfill(5),
+            fr1,
+            fr2,
+            res
+        )
+        print(feedback)
+
+    Parallel(n_jobs=-1, backend="multiprocessing", verbose=0)(delayed(ext)(ix, i, output) for ix, i in enumerate(fr_pw_pt))
+
+    out_array = np.asarray(output)
+    np.save(
+        "data/{}_SSIM_TG.npy".format(str(split_pt).zfill(5)),
+        out_array
+    )
+    np.allclose(out_array, output)
+    os.remove(memmap_file)

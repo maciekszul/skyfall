@@ -1,5 +1,7 @@
+import numpy as np
 import json
 from collections import OrderedDict
+import itertools
 from skimage import data, img_as_float
 from skimage.measure import compare_ssim as ssim
    
@@ -16,6 +18,13 @@ def update_key_value(file, key, value):
     with open(file, "w") as json_file:
         json.dump(data, json_file, indent=4)
 
+
+def pairwise(iterable):
+    a, b = itertools.tee(iterable)
+    next(b, None)
+    return np.array(list(zip(a, b)))
+
+
 def SSIM(img1, img2):
     """
     Function returns SSIM measure from two images as numpy array
@@ -27,6 +36,3 @@ def SSIM(img1, img2):
         multichannel=True
     )
     return ssim_score
-
-def SSIM_temp_gen(ix_mx):
-    pass
